@@ -24,6 +24,7 @@ class PostAnalyticAPIView(generics.ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_class = PostAnalyticFilter
 
+    # Filter and annotate the queryset to calculate likes count by date
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         queryset = (
@@ -39,6 +40,8 @@ class UserAnalyticAPIView(APIView):
     def post(request):
         user = get_object_or_404(User, id=request.data["user_id"])
         action = UserActivity.Actions.SIGN_IN.value
+
+        # Find the last user login activity record
         last_login = UserActivity.objects.filter(user=user, action=action).last()
         try:
             with open("user_requests.log", encoding="utf-8") as file:
@@ -46,6 +49,8 @@ class UserAnalyticAPIView(APIView):
                 last_log = users_log[-1]
 
                 datetime_pattern = r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}"
+
+                # Search for the datetime pattern in the last log entry
                 match = re.search(datetime_pattern, last_log)
 
         except FileNotFoundError:
@@ -53,6 +58,7 @@ class UserAnalyticAPIView(APIView):
 
         message = f"User {user.username} didn`t perform this action"
 
+        # Prepare the response data with user's last login and last request
         data = {
             "users_last_login": last_login.occurred_at if last_login else message,
             "users_last_request": match.group() if match else message,

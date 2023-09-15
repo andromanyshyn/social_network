@@ -9,11 +9,13 @@ from users.serializers import UserSerializer
 User = get_user_model()
 
 
+# Define a view for creating User objects using generics
 class UserAPIView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
 
+# Define a custom ObtainAuthToken view
 class CustomObtainAuthToken(ObtainAuthToken):
     serializer_class = AuthTokenSerializer
 
@@ -21,5 +23,7 @@ class CustomObtainAuthToken(ObtainAuthToken):
         response = super().post(request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
             user = User.objects.get(username=request.data["username"])
+
+            # Use Celery to asynchronously track the user sign-in
             track_user_sign_in.delay(user.id)
         return response

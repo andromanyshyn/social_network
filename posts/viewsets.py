@@ -7,6 +7,7 @@ from posts.permissions import CanInteractWithPostAPI
 from posts.serializers import PostSerializer
 
 
+# Define a viewset for handling Post objects
 class PostAPIViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -15,6 +16,7 @@ class PostAPIViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    # Custom method to handle post activity (tracking liking/unliking on a post)
     def activity(self, request):
         track_post_activity.delay(
             user_id=request.data["user_id"], post_id=request.data["post_id"], action=request.data["action"]
